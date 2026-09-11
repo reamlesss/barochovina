@@ -5,30 +5,22 @@
 const messageCard = document.querySelector(".message-card");
 
 if (messageCard) {
-
-    const observer = new IntersectionObserver(
-
-        (entries) => {
-
-            entries.forEach((entry) => {
-
-                if (entry.isIntersecting) {
-                    entry.target.classList.add("visible");
-                }
-
-            });
-
-        },
-
-        {
-            threshold: 0.25
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("visible");
         }
+      });
+    },
 
-    );
+    {
+      threshold: 0.25,
+    },
+  );
 
-    observer.observe(messageCard);
+  observer.observe(messageCard);
 }
-
 
 /* ========================================================= */
 /* FLOATING HEARTS */
@@ -37,63 +29,48 @@ if (messageCard) {
 const heartsContainer = document.querySelector(".hearts");
 
 function createHeart() {
+  if (!heartsContainer) return;
 
-    if (!heartsContainer) return;
+  const heart = document.createElement("div");
 
-    const heart = document.createElement("div");
+  heart.classList.add("heart");
 
-    heart.classList.add("heart");
+  heart.innerHTML = "♥";
 
-    heart.innerHTML = "♥";
+  heart.style.left = Math.random() * 100 + "%";
 
-    heart.style.left =
-        Math.random() * 100 + "%";
+  heart.style.fontSize = Math.random() * 14 + 8 + "px";
 
-    heart.style.fontSize =
-        (Math.random() * 14 + 8) + "px";
+  heart.style.animationDuration = Math.random() * 8 + 7 + "s";
 
-    heart.style.animationDuration =
-        (Math.random() * 8 + 7) + "s";
+  heart.style.animationDelay = Math.random() * 2 + "s";
 
-    heart.style.animationDelay =
-        Math.random() * 2 + "s";
+  heartsContainer.appendChild(heart);
 
-    heartsContainer.appendChild(heart);
-
-    setTimeout(() => {
-        heart.remove();
-    }, 15000);
+  setTimeout(() => {
+    heart.remove();
+  }, 15000);
 }
 
 setInterval(createHeart, 900);
-
 
 /* ========================================================= */
 /* MOUSE PARALLAX */
 /* ========================================================= */
 
 document.addEventListener("mousemove", (event) => {
+  const x = (event.clientX / window.innerWidth - 0.5) * 2;
 
-    const x =
-        (event.clientX / window.innerWidth - 0.5) * 2;
+  const y = (event.clientY / window.innerHeight - 0.5) * 2;
 
-    const y =
-        (event.clientY / window.innerHeight - 0.5) * 2;
+  const glows = document.querySelectorAll(".glow");
 
-    const glows =
-        document.querySelectorAll(".glow");
+  glows.forEach((glow, index) => {
+    const strength = (index + 1) * 8;
 
-    glows.forEach((glow, index) => {
-
-        const strength = (index + 1) * 8;
-
-        glow.style.transform =
-            `translate(${x * strength}px, ${y * strength}px)`;
-
-    });
-
+    glow.style.transform = `translate(${x * strength}px, ${y * strength}px)`;
+  });
 });
-
 
 /* ========================================================= */
 /* MOVIES */
@@ -108,68 +85,59 @@ document.addEventListener("mousemove", (event) => {
 */
 
 let movies = [
+  {
+    id: 1,
+    title: "Pomocnice 2",
+    type: "movie",
+    year: "2027",
+    note: "",
+    watched: false,
+  },
 
-    {
-        id: 1,
-        title: "Interstellar",
-        type: "movie",
-        year: "2014",
-        note: "Tenhle bychom měli konečně vidět spolu.",
-        watched: false
-    },
+  {
+    id: 2,
+    title: "Šestý smysl",
+    type: "movie",
+    year: "1999",
+    note: "",
+    watched: false,
+  },
 
-    {
-        id: 2,
-        title: "The Notebook",
-        type: "movie",
-        year: "2004",
-        note: "❤️",
-        watched: false
-    },
-
-    {
-        id: 3,
-        title: "Stranger Things",
-        type: "series",
-        year: "2016",
-        note: "Na další společný seriálový večer.",
-        watched: false
-    }
-
+  {
+    id: 3,
+    title: "Game of Thrones",
+    type: "series",
+    year: "2011",
+    note: "",
+    watched: true,
+  },
 ];
 
 let currentMovieFilter = "all";
 
-
 /* Render movies */
 
 function renderMovies() {
+  const moviesList = document.getElementById("moviesList");
 
-    const moviesList =
-        document.getElementById("moviesList");
+  if (!moviesList) return;
 
-    if (!moviesList) return;
+  moviesList.innerHTML = "";
 
-    moviesList.innerHTML = "";
+  const filteredMovies = movies.filter((movie) => {
+    if (currentMovieFilter === "all") {
+      return true;
+    }
 
-    const filteredMovies = movies.filter((movie) => {
+    if (currentMovieFilter === "watched") {
+      return movie.watched;
+    }
 
-        if (currentMovieFilter === "all") {
-            return true;
-        }
+    return movie.type === currentMovieFilter;
+  });
 
-        if (currentMovieFilter === "watched") {
-            return movie.watched;
-        }
-
-        return movie.type === currentMovieFilter;
-
-    });
-
-
-    if (filteredMovies.length === 0) {
-
-        moviesList.innerHTML = `
+  if (filteredMovies.length === 0) {
+    moviesList.innerHTML = `
             <div class="empty-state">
                 <div>♡</div>
                 <p>Zatím tu nic není.</p>
@@ -177,28 +145,20 @@ function renderMovies() {
             </div>
         `;
 
-        return;
-    }
+    return;
+  }
 
+  filteredMovies.forEach((movie) => {
+    const card = document.createElement("article");
 
-    filteredMovies.forEach((movie) => {
+    card.className = `item-card ${movie.watched ? "is-watched" : ""}`;
 
-        const card = document.createElement("article");
-
-        card.className =
-            `item-card ${movie.watched ? "is-watched" : ""}`;
-
-
-        card.innerHTML = `
+    card.innerHTML = `
 
             <div class="item-card-top">
 
                 <div class="item-icon">
-                    ${
-                        movie.type === "movie"
-                            ? "🎬"
-                            : "📺"
-                    }
+                    ${movie.type === "movie" ? "🎬" : "📺"}
                 </div>
 
                 <button
@@ -214,17 +174,9 @@ function renderMovies() {
 
             <div class="item-type">
 
-                ${
-                    movie.type === "movie"
-                        ? "FILM"
-                        : "SERIÁL"
-                }
+                ${movie.type === "movie" ? "FILM" : "SERIÁL"}
 
-                ${
-                    movie.year
-                        ? ` · ${movie.year}`
-                        : ""
-                }
+                ${movie.year ? ` · ${movie.year}` : ""}
 
             </div>
 
@@ -234,11 +186,7 @@ function renderMovies() {
             </h3>
 
 
-            ${
-                movie.note
-                    ? `<p>${escapeHtml(movie.note)}</p>`
-                    : ""
-            }
+            ${movie.note ? `<p>${escapeHtml(movie.note)}</p>` : ""}
 
 
             <button
@@ -246,187 +194,141 @@ function renderMovies() {
                 onclick="toggleMovieWatched(${movie.id})"
             >
 
-                ${
-                    movie.watched
-                        ? "❤️ Viděno"
-                        : "♡ Označit jako viděné"
-                }
+                ${movie.watched ? "❤️ Viděno" : "♡ Označit jako viděné"}
 
             </button>
 
         `;
 
-        moviesList.appendChild(card);
-
-    });
-
+    moviesList.appendChild(card);
+  });
 }
-
 
 /* Delete movie */
 
 function deleteMovie(id) {
+  movies = movies.filter((movie) => movie.id !== id);
 
-    movies = movies.filter((movie) => movie.id !== id);
-
-    renderMovies();
+  renderMovies();
 }
-
 
 /* Mark movie as watched */
 
 function toggleMovieWatched(id) {
+  const movie = movies.find((movie) => movie.id === id);
 
-    const movie =
-        movies.find((movie) => movie.id === id);
+  if (!movie) return;
 
-    if (!movie) return;
+  movie.watched = !movie.watched;
 
-    movie.watched = !movie.watched;
-
-    renderMovies();
+  renderMovies();
 }
-
 
 /* Movie filters */
 
 document.querySelectorAll("[data-filter]").forEach((button) => {
-
-    button.addEventListener("click", () => {
-
-        document
-            .querySelectorAll("[data-filter]")
-            .forEach((button) => {
-                button.classList.remove("active");
-            });
-
-        button.classList.add("active");
-
-        currentMovieFilter =
-            button.dataset.filter;
-
-        renderMovies();
-
+  button.addEventListener("click", () => {
+    document.querySelectorAll("[data-filter]").forEach((button) => {
+      button.classList.remove("active");
     });
 
-});
+    button.classList.add("active");
 
+    currentMovieFilter = button.dataset.filter;
+
+    renderMovies();
+  });
+});
 
 /* Add movie */
 
-const movieForm =
-    document.getElementById("movieForm");
+const movieForm = document.getElementById("movieForm");
 
 if (movieForm) {
+  movieForm.addEventListener("submit", (event) => {
+    event.preventDefault();
 
-    movieForm.addEventListener("submit", (event) => {
+    const title = document.getElementById("movieTitle").value.trim();
 
-        event.preventDefault();
+    const type = document.getElementById("movieType").value;
 
+    const year = document.getElementById("movieYear").value;
 
-        const title =
-            document.getElementById("movieTitle").value.trim();
+    const note = document.getElementById("movieNote").value.trim();
 
-        const type =
-            document.getElementById("movieType").value;
+    movies.push({
+      id: Date.now(),
 
-        const year =
-            document.getElementById("movieYear").value;
+      title,
 
-        const note =
-            document.getElementById("movieNote").value.trim();
+      type,
 
+      year,
 
-        movies.push({
+      note,
 
-            id: Date.now(),
-
-            title,
-
-            type,
-
-            year,
-
-            note,
-
-            watched: false
-
-        });
-
-
-        renderMovies();
-
-        movieForm.reset();
-
-        closeModal("movieModal");
-
+      watched: false,
     });
 
-}
+    renderMovies();
 
+    movieForm.reset();
+
+    closeModal("movieModal");
+  });
+}
 
 /* ========================================================= */
 /* TRAVEL BUCKET LIST */
 /* ========================================================= */
 
 let travelPlaces = [
+  {
+    id: 1,
+    name: "Řím",
+    country: "Itálie",
+    note: "",
+    status: "visited",
+  },
 
-    {
-        id: 1,
-        name: "Santorini",
-        country: "Řecko",
-        note: "Jednou tam spolu musíme jet.",
-        status: "planned"
-    },
+  {
+    id: 2,
+    name: "Vánoční New York",
+    country: "USA",
+    note: "",
+    status: "planned",
+  },
 
-    {
-        id: 2,
-        name: "Dolomity",
-        country: "Itálie",
-        note: "Hory, výhledy a pořádná roadtripová cesta.",
-        status: "planned"
-    },
-
-    {
-        id: 3,
-        name: "Lignano Sabbiadoro",
-        country: "Itálie",
-        note: "❤️",
-        status: "visited"
-    }
-
+  {
+    id: 3,
+    name: "Laponsko",
+    country: "Finsko",
+    note: "",
+    status: "planned",
+  },
 ];
 
 let currentTravelFilter = "all";
 
-
 /* Render travel */
 
 function renderTravel() {
+  const travelList = document.getElementById("travelList");
 
-    const travelList =
-        document.getElementById("travelList");
+  if (!travelList) return;
 
-    if (!travelList) return;
+  travelList.innerHTML = "";
 
-    travelList.innerHTML = "";
+  const filteredPlaces = travelPlaces.filter((place) => {
+    if (currentTravelFilter === "all") {
+      return true;
+    }
 
+    return place.status === currentTravelFilter;
+  });
 
-    const filteredPlaces =
-        travelPlaces.filter((place) => {
-
-            if (currentTravelFilter === "all") {
-                return true;
-            }
-
-            return place.status === currentTravelFilter;
-
-        });
-
-
-    if (filteredPlaces.length === 0) {
-
-        travelList.innerHTML = `
+  if (filteredPlaces.length === 0) {
+    travelList.innerHTML = `
             <div class="empty-state">
                 <div>🌍</div>
                 <p>Zatím tu nic není.</p>
@@ -434,24 +336,17 @@ function renderTravel() {
             </div>
         `;
 
-        return;
-    }
+    return;
+  }
 
+  filteredPlaces.forEach((place) => {
+    const card = document.createElement("article");
 
-    filteredPlaces.forEach((place) => {
+    card.className = `item-card travel-card ${
+      place.status === "visited" ? "is-watched" : ""
+    }`;
 
-        const card =
-            document.createElement("article");
-
-        card.className =
-            `item-card travel-card ${
-                place.status === "visited"
-                    ? "is-watched"
-                    : ""
-            }`;
-
-
-        card.innerHTML = `
+    card.innerHTML = `
 
             <div class="item-card-top">
 
@@ -472,11 +367,7 @@ function renderTravel() {
 
             <div class="item-type">
 
-                ${
-                    place.status === "visited"
-                        ? "NAVŠTÍVENO"
-                        : "BUCKET LIST"
-                }
+                ${place.status === "visited" ? "NAVŠTÍVENO" : "BUCKET LIST"}
 
             </div>
 
@@ -487,21 +378,17 @@ function renderTravel() {
 
 
             ${
-                place.country
-                    ? `
+              place.country
+                ? `
                         <div class="travel-country">
                             ${escapeHtml(place.country)}
                         </div>
                     `
-                    : ""
+                : ""
             }
 
 
-            ${
-                place.note
-                    ? `<p>${escapeHtml(place.note)}</p>`
-                    : ""
-            }
+            ${place.note ? `<p>${escapeHtml(place.note)}</p>` : ""}
 
 
             <button
@@ -510,339 +397,218 @@ function renderTravel() {
             >
 
                 ${
-                    place.status === "visited"
-                        ? "❤️ Navštíveno"
-                        : "♡ Označit jako navštívené"
+                  place.status === "visited"
+                    ? "❤️ Navštíveno"
+                    : "♡ Označit jako navštívené"
                 }
 
             </button>
 
         `;
 
-
-        travelList.appendChild(card);
-
-    });
-
+    travelList.appendChild(card);
+  });
 }
-
 
 /* Delete travel place */
 
 function deleteTravelPlace(id) {
+  travelPlaces = travelPlaces.filter((place) => place.id !== id);
 
-    travelPlaces =
-        travelPlaces.filter((place) => place.id !== id);
-
-    renderTravel();
-
+  renderTravel();
 }
-
 
 /* Toggle visited */
 
 function toggleTravelVisited(id) {
+  const place = travelPlaces.find((place) => place.id === id);
 
-    const place =
-        travelPlaces.find((place) => place.id === id);
+  if (!place) return;
 
-    if (!place) return;
+  place.status = place.status === "visited" ? "planned" : "visited";
 
-    place.status =
-        place.status === "visited"
-            ? "planned"
-            : "visited";
-
-    renderTravel();
-
+  renderTravel();
 }
-
 
 /* Travel filters */
 
-document
-    .querySelectorAll("[data-travel-filter]")
-    .forEach((button) => {
-
-        button.addEventListener("click", () => {
-
-            document
-                .querySelectorAll("[data-travel-filter]")
-                .forEach((button) => {
-                    button.classList.remove("active");
-                });
-
-
-            button.classList.add("active");
-
-
-            currentTravelFilter =
-                button.dataset.travelFilter;
-
-
-            renderTravel();
-
-        });
-
+document.querySelectorAll("[data-travel-filter]").forEach((button) => {
+  button.addEventListener("click", () => {
+    document.querySelectorAll("[data-travel-filter]").forEach((button) => {
+      button.classList.remove("active");
     });
 
+    button.classList.add("active");
+
+    currentTravelFilter = button.dataset.travelFilter;
+
+    renderTravel();
+  });
+});
 
 /* Add travel place */
 
-const travelForm =
-    document.getElementById("travelForm");
+const travelForm = document.getElementById("travelForm");
 
 if (travelForm) {
+  travelForm.addEventListener("submit", (event) => {
+    event.preventDefault();
 
-    travelForm.addEventListener("submit", (event) => {
+    const name = document.getElementById("travelName").value.trim();
 
-        event.preventDefault();
+    const country = document.getElementById("travelCountry").value.trim();
 
+    const note = document.getElementById("travelNote").value.trim();
 
-        const name =
-            document.getElementById("travelName").value.trim();
+    travelPlaces.push({
+      id: Date.now(),
 
-        const country =
-            document.getElementById("travelCountry").value.trim();
+      name,
 
-        const note =
-            document.getElementById("travelNote").value.trim();
+      country,
 
+      note,
 
-        travelPlaces.push({
-
-            id: Date.now(),
-
-            name,
-
-            country,
-
-            note,
-
-            status: "planned"
-
-        });
-
-
-        renderTravel();
-
-        travelForm.reset();
-
-        closeModal("travelModal");
-
+      status: "planned",
     });
 
-}
+    renderTravel();
 
+    travelForm.reset();
+
+    closeModal("travelModal");
+  });
+}
 
 /* ========================================================= */
 /* MODALS */
 /* ========================================================= */
 
 function openModal(id) {
+  const modal = document.getElementById(id);
 
-    const modal =
-        document.getElementById(id);
+  if (!modal) return;
 
-    if (!modal) return;
+  modal.classList.add("active");
 
-    modal.classList.add("active");
-
-    document.body.classList.add("modal-open");
-
+  document.body.classList.add("modal-open");
 }
-
 
 function closeModal(id) {
+  const modal = document.getElementById(id);
 
-    const modal =
-        document.getElementById(id);
+  if (!modal) return;
 
-    if (!modal) return;
+  modal.classList.remove("active");
 
-    modal.classList.remove("active");
-
-    document.body.classList.remove("modal-open");
-
+  document.body.classList.remove("modal-open");
 }
-
 
 /* Open movie modal */
 
-const openMovieModal =
-    document.getElementById("openMovieModal");
+const openMovieModal = document.getElementById("openMovieModal");
 
 if (openMovieModal) {
-
-    openMovieModal.addEventListener("click", () => {
-        openModal("movieModal");
-    });
-
+  openMovieModal.addEventListener("click", () => {
+    openModal("movieModal");
+  });
 }
-
 
 /* Open travel modal */
 
-const openTravelModal =
-    document.getElementById("openTravelModal");
+const openTravelModal = document.getElementById("openTravelModal");
 
 if (openTravelModal) {
-
-    openTravelModal.addEventListener("click", () => {
-        openModal("travelModal");
-    });
-
+  openTravelModal.addEventListener("click", () => {
+    openModal("travelModal");
+  });
 }
-
 
 /* Close buttons */
 
-document
-    .querySelectorAll("[data-close]")
-    .forEach((button) => {
-
-        button.addEventListener("click", () => {
-
-            closeModal(button.dataset.close);
-
-        });
-
-    });
-
+document.querySelectorAll("[data-close]").forEach((button) => {
+  button.addEventListener("click", () => {
+    closeModal(button.dataset.close);
+  });
+});
 
 /* Close when clicking outside */
 
-document
-    .querySelectorAll(".modal-overlay")
-    .forEach((overlay) => {
-
-        overlay.addEventListener("click", (event) => {
-
-            if (event.target === overlay) {
-
-                closeModal(overlay.id);
-
-            }
-
-        });
-
-    });
-
+document.querySelectorAll(".modal-overlay").forEach((overlay) => {
+  overlay.addEventListener("click", (event) => {
+    if (event.target === overlay) {
+      closeModal(overlay.id);
+    }
+  });
+});
 
 /* Close with Escape */
 
 document.addEventListener("keydown", (event) => {
+  if (event.key !== "Escape") return;
 
-    if (event.key !== "Escape") return;
-
-    document
-        .querySelectorAll(".modal-overlay.active")
-        .forEach((modal) => {
-
-            closeModal(modal.id);
-
-        });
-
+  document.querySelectorAll(".modal-overlay.active").forEach((modal) => {
+    closeModal(modal.id);
+  });
 });
-
 
 /* ========================================================= */
 /* BASIC HTML ESCAPE */
 /* ========================================================= */
 
 function escapeHtml(text) {
+  const div = document.createElement("div");
 
-    const div =
-        document.createElement("div");
+  div.textContent = text;
 
-    div.textContent = text;
-
-    return div.innerHTML;
-
+  return div.innerHTML;
 }
-
-
-
 
 /* ========================================================= */
 /* MEMORIES LIGHTBOX */
 /* ========================================================= */
 
-const memoryPhotos =
-    document.querySelectorAll(".memory-photo");
+const memoryPhotos = document.querySelectorAll(".memory-photo");
 
-const photoLightbox =
-    document.getElementById("photoLightbox");
+const photoLightbox = document.getElementById("photoLightbox");
 
-const lightboxImage =
-    document.getElementById("lightboxImage");
+const lightboxImage = document.getElementById("lightboxImage");
 
-const lightboxClose =
-    document.getElementById("lightboxClose");
-
+const lightboxClose = document.getElementById("lightboxClose");
 
 memoryPhotos.forEach((photo) => {
+  photo.addEventListener("click", () => {
+    const image = photo.querySelector("img");
 
-    photo.addEventListener("click", () => {
+    lightboxImage.src = image.src;
 
-        const image =
-            photo.querySelector("img");
+    lightboxImage.alt = image.alt;
 
-        lightboxImage.src =
-            image.src;
+    photoLightbox.classList.add("active");
 
-        lightboxImage.alt =
-            image.alt;
-
-        photoLightbox.classList.add("active");
-
-        document.body.classList.add("modal-open");
-
-    });
-
+    document.body.classList.add("modal-open");
+  });
 });
 
-
 function closeLightbox() {
+  photoLightbox.classList.remove("active");
 
-    photoLightbox.classList.remove("active");
-
-    document.body.classList.remove("modal-open");
-
+  document.body.classList.remove("modal-open");
 }
 
+lightboxClose.addEventListener("click", closeLightbox);
 
-lightboxClose.addEventListener(
-    "click",
-    closeLightbox
-);
+photoLightbox.addEventListener("click", (event) => {
+  if (event.target === photoLightbox) {
+    closeLightbox();
+  }
+});
 
-
-photoLightbox.addEventListener(
-    "click",
-    (event) => {
-
-        if (event.target === photoLightbox) {
-            closeLightbox();
-        }
-
-    }
-);
-
-
-document.addEventListener(
-    "keydown",
-    (event) => {
-
-        if (
-            event.key === "Escape" &&
-            photoLightbox.classList.contains("active")
-        ) {
-            closeLightbox();
-        }
-
-    }
-);
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && photoLightbox.classList.contains("active")) {
+    closeLightbox();
+  }
+});
 /* ========================================================= */
 /* LOVE TIMER */
 /* ========================================================= */
@@ -850,59 +616,52 @@ document.addEventListener(
 const relationshipStart = new Date(2025, 9, 30, 0, 0, 0);
 
 function updateLoveTimer() {
-    const now = new Date();
+  const now = new Date();
 
-    let months =
-        (now.getFullYear() - relationshipStart.getFullYear()) * 12 +
-        (now.getMonth() - relationshipStart.getMonth());
+  let months =
+    (now.getFullYear() - relationshipStart.getFullYear()) * 12 +
+    (now.getMonth() - relationshipStart.getMonth());
 
-    let anniversary = new Date(
-        relationshipStart.getFullYear(),
-        relationshipStart.getMonth() + months,
-        relationshipStart.getDate(),
-        relationshipStart.getHours(),
-        relationshipStart.getMinutes(),
-        relationshipStart.getSeconds()
+  let anniversary = new Date(
+    relationshipStart.getFullYear(),
+    relationshipStart.getMonth() + months,
+    relationshipStart.getDate(),
+    relationshipStart.getHours(),
+    relationshipStart.getMinutes(),
+    relationshipStart.getSeconds(),
+  );
+
+  if (anniversary > now) {
+    months--;
+
+    anniversary = new Date(
+      relationshipStart.getFullYear(),
+      relationshipStart.getMonth() + months,
+      relationshipStart.getDate(),
+      relationshipStart.getHours(),
+      relationshipStart.getMinutes(),
+      relationshipStart.getSeconds(),
     );
+  }
 
-    if (anniversary > now) {
-        months--;
+  const remaining = now - anniversary;
 
-        anniversary = new Date(
-            relationshipStart.getFullYear(),
-            relationshipStart.getMonth() + months,
-            relationshipStart.getDate(),
-            relationshipStart.getHours(),
-            relationshipStart.getMinutes(),
-            relationshipStart.getSeconds()
-        );
-    }
+  const days = Math.floor(remaining / (1000 * 60 * 60 * 24));
 
-    const remaining = now - anniversary;
+  const hours = Math.floor(
+    (remaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60),
+  );
 
-    const days = Math.floor(
-        remaining / (1000 * 60 * 60 * 24)
-    );
+  const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
 
-    const hours = Math.floor(
-        (remaining % (1000 * 60 * 60 * 24)) /
-        (1000 * 60 * 60)
-    );
-
-    const seconds = Math.floor(
-        (remaining % (1000 * 60)) /
-        1000
-    );
-
-    document.getElementById("timerMonths").textContent = months;
-    document.getElementById("timerDays").textContent = days;
-    document.getElementById("timerHours").textContent = hours;
-    document.getElementById("timerSeconds").textContent = seconds;
+  document.getElementById("timerMonths").textContent = months;
+  document.getElementById("timerDays").textContent = days;
+  document.getElementById("timerHours").textContent = hours;
+  document.getElementById("timerSeconds").textContent = seconds;
 }
 
 updateLoveTimer();
 setInterval(updateLoveTimer, 1000);
-
 
 /* ========================================================= */
 /* INITIAL RENDER */
