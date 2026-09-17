@@ -73,45 +73,67 @@ document.addEventListener("mousemove", (event) => {
 });
 
 /* ========================================================= */
-/* MOVIES */
+/* SHARED DATA */
 /* ========================================================= */
 
-/*
-    ZATÍM JS DATA.
+// Add these two values from Supabase in SUPABASE_SETUP.md.
+const SUPABASE_URL = "https://zppqorgbronslvzrbatt.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_94hJlXud2vHJfrUw3EVGsA_RuQcGNoV";
+const hasSupabaseConfig =
+  !SUPABASE_URL.startsWith("YOUR_") && !SUPABASE_ANON_KEY.startsWith("YOUR_");
+const supabaseClient = hasSupabaseConfig
+  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  : null;
 
-    Později tuto část napojíme na Firebase.
-    Struktura dat už je připravená tak, aby se
-    dala jednoduše přesunout do databáze.
-*/
+let movies = [];
+let travelPlaces = [];
 
-let movies = [
-  {
-    id: 1,
-    title: "Pomocnice 2",
-    type: "movie",
-    year: "2027",
-    note: "",
-    watched: false,
-  },
+function showDatabaseError(error) {
+  console.error("Shared list error:", error);
+  alert("Sdílený seznam se nepodařilo načíst. Zkontroluj nastavení Supabase.");
+}
 
-  {
-    id: 2,
-    title: "Šestý smysl",
-    type: "movie",
-    year: "1999",
-    note: "",
-    watched: false,
-  },
+async function loadSharedLists() {
+  if (!supabaseClient) {
+    console.warn("Supabase is not configured. Follow SUPABASE_SETUP.md.");
+    return;
+  }
 
-  {
-    id: 3,
-    title: "Game of Thrones",
-    type: "series",
-    year: "2011",
-    note: "",
-    watched: true,
-  },
-];
+  const [moviesResult, placesResult] = await Promise.all([
+    supabaseClient.from("movies").select("*").order("created_at"),
+    supabaseClient.from("places").select("*").order("created_at"),
+  ]);
+
+  if (moviesResult.error) throw moviesResult.error;
+  if (placesResult.error) throw placesResult.error;
+
+  movies = moviesResult.data;
+  travelPlaces = placesResult.data;
+  renderMovies();
+  renderTravel();
+}
+
+function subscribeToSharedLists() {
+  if (!supabaseClient) return;
+
+  supabaseClient
+    .channel("shared-lists")
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "movies" },
+      loadSharedLists,
+    )
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "places" },
+      loadSharedLists,
+    )
+    .subscribe();
+}
+
+/* ========================================================= */
+/* MOVIES */
+/* ========================================================= */
 
 let currentMovieFilter = "all";
 
@@ -206,22 +228,24 @@ function renderMovies() {
 
 /* Delete movie */
 
-function deleteMovie(id) {
-  movies = movies.filter((movie) => movie.id !== id);
+async function deleteMovie(id) {
+  if (!supabaseClient) return;
 
-  renderMovies();
+  const { error } = await supabaseClient.from("movies").delete().eq("id", id);
+  if (error) showDatabaseError(error);
 }
 
 /* Mark movie as watched */
 
-function toggleMovieWatched(id) {
+async function toggleMovieWatched(id) {
   const movie = movies.find((movie) => movie.id === id);
+  if (!movie || !supabaseClient) return;
 
-  if (!movie) return;
-
-  movie.watched = !movie.watched;
-
-  renderMovies();
+  const { error } = await supabaseClient
+    .from("movies")
+    .update({ watched: !movie.watched })
+    .eq("id", id);
+  if (error) showDatabaseError(error);
 }
 
 /* Movie filters */
@@ -245,7 +269,7 @@ document.querySelectorAll("[data-filter]").forEach((button) => {
 const movieForm = document.getElementById("movieForm");
 
 if (movieForm) {
-  movieForm.addEventListener("submit", (event) => {
+  movieForm.addEventListener("submit", async (event) => {
     event.preventDefault();
 
     const title = document.getElementById("movieTitle").value.trim();
@@ -256,21 +280,20 @@ if (movieForm) {
 
     const note = document.getElementById("movieNote").value.trim();
 
-    movies.push({
-      id: Date.now(),
+    if (!supabaseClient) return;
 
+    const { error } = await supabaseClient.from("movies").insert({
       title,
-
       type,
-
-      year,
-
+      year: year ? Number(year) : null,
       note,
-
       watched: false,
     });
 
-    renderMovies();
+    if (error) {
+      showDatabaseError(error);
+      return;
+    }
 
     movieForm.reset();
 
@@ -281,32 +304,6 @@ if (movieForm) {
 /* ========================================================= */
 /* TRAVEL BUCKET LIST */
 /* ========================================================= */
-
-let travelPlaces = [
-  {
-    id: 1,
-    name: "Řím",
-    country: "Itálie",
-    note: "",
-    status: "visited",
-  },
-
-  {
-    id: 2,
-    name: "Vánoční New York",
-    country: "USA",
-    note: "",
-    status: "planned",
-  },
-
-  {
-    id: 3,
-    name: "Laponsko",
-    country: "Finsko",
-    note: "",
-    status: "planned",
-  },
-];
 
 let currentTravelFilter = "all";
 
@@ -412,22 +409,24 @@ function renderTravel() {
 
 /* Delete travel place */
 
-function deleteTravelPlace(id) {
-  travelPlaces = travelPlaces.filter((place) => place.id !== id);
+async function deleteTravelPlace(id) {
+  if (!supabaseClient) return;
 
-  renderTravel();
+  const { error } = await supabaseClient.from("places").delete().eq("id", id);
+  if (error) showDatabaseError(error);
 }
 
 /* Toggle visited */
 
-function toggleTravelVisited(id) {
+async function toggleTravelVisited(id) {
   const place = travelPlaces.find((place) => place.id === id);
+  if (!place || !supabaseClient) return;
 
-  if (!place) return;
-
-  place.status = place.status === "visited" ? "planned" : "visited";
-
-  renderTravel();
+  const { error } = await supabaseClient
+    .from("places")
+    .update({ status: place.status === "visited" ? "planned" : "visited" })
+    .eq("id", id);
+  if (error) showDatabaseError(error);
 }
 
 /* Travel filters */
@@ -451,7 +450,7 @@ document.querySelectorAll("[data-travel-filter]").forEach((button) => {
 const travelForm = document.getElementById("travelForm");
 
 if (travelForm) {
-  travelForm.addEventListener("submit", (event) => {
+  travelForm.addEventListener("submit", async (event) => {
     event.preventDefault();
 
     const name = document.getElementById("travelName").value.trim();
@@ -460,19 +459,19 @@ if (travelForm) {
 
     const note = document.getElementById("travelNote").value.trim();
 
-    travelPlaces.push({
-      id: Date.now(),
+    if (!supabaseClient) return;
 
+    const { error } = await supabaseClient.from("places").insert({
       name,
-
       country,
-
       note,
-
       status: "planned",
     });
 
-    renderTravel();
+    if (error) {
+      showDatabaseError(error);
+      return;
+    }
 
     travelForm.reset();
 
@@ -664,8 +663,10 @@ updateLoveTimer();
 setInterval(updateLoveTimer, 1000);
 
 /* ========================================================= */
-/* INITIAL RENDER */
+/* INITIAL LOAD */
 /* ========================================================= */
 
 renderMovies();
 renderTravel();
+loadSharedLists().catch(showDatabaseError);
+subscribeToSharedLists();
